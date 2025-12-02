@@ -3,9 +3,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <Windows.h>
+#include <stdbool.h>
 
 #define SIZE_MENU 7
 #define MAX_INPUT 100
+#define GOOD_INP 1
+#define ERR_INP 0
 
 // Структура для хранения данных интеграла
 typedef struct {
@@ -22,7 +25,6 @@ void Menu(const char** list_menu, int point);
 void InputBounds(IntegralData* data);
 void InputStep(IntegralData* data);
 void CalculateIntegral(IntegralData* data);
-double F(double a);
 double Calcul_Accuracy(double a, double b);
 void DetermineAccuracy(IntegralData* data);
 void PrintResult(IntegralData* data);
@@ -114,28 +116,58 @@ void InputBounds(IntegralData* data) {
     printf("║             ВВОД ГРАНИЦ ИНТЕГРАЛА            ║\n");
     printf("╚══════════════════════════════════════════════╝\n\n");
 
-    printf("Введите нижнюю границу a: ");
     double a,b;
-    char c;
-    while (1) {
-        int result = scanf("%lf%c", &a, &c);
-        if (result == 2 && (c == '\n' || c==' \n')) {break;}
-        else {printf("\nОшибка! Введите одно число: ");
-            ClearInputBuffer();
-        }
-    }
+    int new_inp1=GOOD_INP, v=1;
+    const double MAX_V=1e6, MIN_V=-1e6;
+    do {
+      do {
+          a = 0;
+          new_inp1 = GOOD_INP;
+          printf("Введите нижнюю границу a (от %.e до %.e): ", MIN_V, MAX_V);
+          scanf("%lf", &a);
+          char c = getchar();
 
-    printf("Введите верхнюю границу b: ");
-    while (1) {
-        int result = scanf("%lf%c", &b, &c);
-        if (result == 2 && (c == '\n' || c==' \n')) {break;}
-        else {printf("\nОшибка! Введите одно число: ");
-            ClearInputBuffer();
-        }
+          if (c != '\n')
+            if (c != EOF) {
+              ClearInputBuffer();
+              printf("Зачем вы написали буквы???\n");
+              new_inp1 = ERR_INP;
+            }
+          if ((a < -1000000) || (a > 1000000)) {
+            printf("Читайте интервал внимательно!!!\n");
+            new_inp1 = ERR_INP;
+          }
+      } while (new_inp1 != GOOD_INP);
+
+      do {
+          b=0;
+          new_inp1 = GOOD_INP;
+          printf("Введите нижнюю границу b (от %.e до %.e): ", MIN_V, MAX_V);
+          scanf("%lf", &b);
+          char c = getchar();
+
+          if (c != '\n')
+            if (c != EOF) {
+              ClearInputBuffer();
+              printf("Зачем вы написали буквы???\n");
+              new_inp1 = ERR_INP;
+            }
+          if ((b < MIN_V) || (b > MAX_V)) {
+            printf("Читайте интервал внимательно!!!\n");
+            new_inp1 = ERR_INP;
+          }
+      } while (new_inp1!=GOOD_INP);
+
+    if (a!=b) v=1;
+    else {
+      printf("Границы не должны совпадать!");
+      v=0;
     }
+    }while (v!=1);
+
     data->a=a; data->b=b;
     // Проверка корректности границ
-    if (data->a >= data->b) {
+    if (data->a > data->b) {
         printf("Ошибка: нижняя граница должна быть меньше верхней!\n");
         printf("Автоматическая замена значений...\n");
         double temp = data->a;
@@ -153,15 +185,15 @@ void InputStep(IntegralData* data) {
     printf("╚══════════════════════════════════════════════╝\n\n");
 
     printf("Текущий шаг: Не установлен\n");
-    printf("Введите новый шаг интегрирования (10^-10<=step>=1): ");
+    printf("Введите новый шаг интегрирования (10^(-3)<=step<=2): ");
 
     double new_step;
     char c;
     while (1) {
         int result=scanf("%lf%c",&new_step,&c);
         if (result == 2 && (c == '\n' || c==' \n')) {
-            if (new_step > 0.00000000001 && new_step<=1) {data->step = new_step;break;}
-            else {printf("Шаг должен быть: (10^(-10)<=step>=1) ! Введите снова: ");}
+            if (new_step >= 0.001 && new_step<=1) {data->step = new_step;break;}
+            else {printf("Шаг должен быть: (10^(-3)<=step>=1) ! Введите снова: ");}
         } else {
             // Ошибка: либо не число, либо лишние символы
             printf("Ошибка! Введите только одно положительное число: ");
@@ -187,40 +219,53 @@ void CalculateIntegral(IntegralData* data) {
         printf("Ошибка: шаг интегрирования не установлен, либо границы совпадают! Вернись и исправь!\n");
         return;
     }
+    if (data->b<2.10487){
+      printf("Вычисление интеграла методом Симпсона...\n");
+      printf("Границы: [%.4lf, %.4lf]\n", data->a, data->b);
+      printf("f(x)>0: [2.10487, +∞]");
+      data->result=0;
+      printf("\n✅ Интеграл успешно вычислен!\n");
+      printf("Результат: %.8lf\n", data->result);
+    }
+    else{
+      if (data->a<2.10487) data->a =2.10487;
+      printf("Вычисление интеграла методом Симпсона...\n");
+      printf("Границы: [%.4lf, %.4lf]\n", data->a, data->b);
+      printf("Шаг: %.11lf\n\n", data->step);
+      printf("|..");Sleep(500);printf("..");
 
-    printf("Вычисление интеграла методом Симпсона...\n");
-    printf("Границы: [%.3lf, %.3lf]\n", data->a, data->b);
-    printf("Шаг: %.11lf\n\n", data->step);
-    printf("|..");Sleep(500);printf("..");Sleep(500);printf("..");
-    Sleep(500);printf("..");Sleep(500);printf("..");Sleep(500);printf("..");Sleep(500);printf("..|\n");Sleep(300);
+      int n = (int)((data->b - data->a) / data->step);  // количество отрезков
 
-    int n = (int)((data->b - data->a) / data->step);  // количество отрезков
+      Sleep(500);printf("..");Sleep(500);printf("..");
 
-    if (n % 2 != 0) {n++;}
+      if (n % 2 != 0) {n++;}
 
-    double h = (data->b - data->a) / n;  // пересчитываем шаг
-    double sum = Function(data->a) + Function(data->b);
+      double h = (data->b - data->a) / n;  // пересчитываем шаг
 
-    for (int i = 1; i < n; i += 2) {sum += 4 * Function(data->a + i * h);}
+      Sleep(500);printf("..");Sleep(500);
 
-    for (int i = 2; i < n; i += 2) {sum += 2 * Function(data->a + i * h);}
+      double sum = Function(data->a) + Function(data->b);
 
-    data->result = (h/3)*(sum);
-    data->calculated = 1;
+      printf("..");Sleep(500);printf("..|\n");Sleep(300);
 
-    printf("\n✅ Интеграл успешно вычислен!\n");
-    printf("Количество шагов: %d\n", n);
-    printf("Результат: %.8lf\n", data->result);
+      for (int i = 1; i < n; i += 2) {sum += 4 * Function(data->a + i * h);}
+
+      for (int i = 2; i < n; i += 2) {sum += 2 * Function(data->a + i * h);}
+
+      data->result = (h/3)*(sum);
+      data->calculated = 1;
+      printf("\n✅ Интеграл успешно вычислен!\n");
+      printf("Количество шагов: %d\n", n);
+    }
 }
 
-double F(double a) {
-  return (pow(a,4))/4.0 - (pow(a,3))/3.0 +(pow(a,2))/2.0+7*(a);
-}
 double Calcul_Accuracy(double a, double b) {
   double zero_fun =2.10487;
-  if (a <= zero_fun && b >= zero_fun) return F(b) - F(zero_fun);
+  if (a <= zero_fun && b >= zero_fun){
+    return (pow(b,4))/4.0 - (pow(b,3))/3.0 +(pow(b,2))/2.0+7*(b) - (pow(zero_fun,4))/4.0 - (pow(zero_fun,3))/3.0 +(pow(zero_fun,2))/2.0+7*(zero_fun);}
   else if (a <= zero_fun && b <= zero_fun) return 0;
-  else if (a >= zero_fun && b >= zero_fun) return F(b) - F(a);
+  else if (a >= zero_fun && b >= zero_fun){
+    return (pow(b,4))/4.0 - (pow(b,3))/3.0 +(pow(b,2))/2.0+7*(b) - (pow(a,4))/4.0 - (pow(a,3))/3.0 +(pow(a,2))/2.0+7*(a);}
   return 0;
 }
 
@@ -228,14 +273,18 @@ void DetermineAccuracy(IntegralData* data) {
     printf("╔══════════════════════════════════════════════╗\n");
     printf("║             ОПРЕДЕЛЕНИЕ ПОГРЕШНОСТИ          ║\n");
     printf("╚══════════════════════════════════════════════╝\n\n");
-
+    printf("Значение интеграла методом симпсона: %lf\n", data->result);
+    double H_L=Calcul_Accuracy(data->a,data->b);
+    printf("Абсолютно значение: %lf\n",H_L);
     printf("|..");Sleep(500);printf("..");Sleep(500);printf("..");
     Sleep(500);printf("..");Sleep(500);printf("..");Sleep(500);printf("..");Sleep(500);printf("..|\n");Sleep(300);
 
-    double H_L=Calcul_Accuracy(data->a,data->b);
-    printf("Абсолютно значение: %lf\n",H_L);
-    double new_accuracy=(abs((data->result)-H_L)/H_L)*100;
-    printf("Погрешность установлена: %lf %\n", data->accuracy);
+    if (data->result<1e-15){printf("Погрешность установлена: Nan");data->accuracy=0.0;}
+    else{
+    double new_accuracy=(fabs((data->result)-H_L)/H_L)*100;
+    data->accuracy=new_accuracy;
+    printf("Погрешность ≈ : %lf %\n", data->accuracy);
+    }
 }
 
 void PrintResult(IntegralData* data) {
@@ -243,9 +292,20 @@ void PrintResult(IntegralData* data) {
     printf("║               РЕЗУЛЬТАТЫ                     ║\n");
     printf("╚══════════════════════════════════════════════╝\n\n");
 
+    if (data->result==0) {
+      printf("Границы интегрирования за пределами положительной части функции!(\n");
+      printf("Границы интегрирования:\n");
+      printf(" ▷ a = %.6lf\n", data->a);
+      printf(" ▷ b = %.6lf\n", data->b);
+      printf(" ▷ ∫f(x)dx = Nan\n");
+      if (data->accuracy==0.0) {printf(" ▷ Относительная погрешность: Nan");}
+      else {printf(" ▷ Относительная погрешность: %.8lf %\n\n", data->accuracy);}
+    }
+    else{
     printf("Границы интегрирования:\n");
     printf(" ▷ a = %.6lf\n", data->a);
     printf(" ▷ b = %.6lf\n", data->b);
+    if (data->accuracy==0.0) {printf(" ▷ f(x)>0: [2.10487;+∞]");}
     printf(" ▷ Длина интервала: %.6lf\n\n", data->b - data->a);
 
     printf("Параметры вычисления:\n");
@@ -254,11 +314,12 @@ void PrintResult(IntegralData* data) {
     if (data->calculated) {
         printf("РЕЗУЛЬТАТ ВЫЧИСЛЕНИЙ:\n");
         printf(" ▷ ∫f(x)dx = %.8lf\n", data->result);
-        printf(" ▷ Относительная погрешность: %.8lf\n\n", data->accuracy);
+        if (data->accuracy==0.0) {printf(" ▷ Относительная погрешность: Nan");}
+        else {printf(" ▷ Относительная погрешность: %.8lf %\n\n", data->accuracy);}
     } else {
         printf("❌ Интеграл ещё не вычислен!\n");
         printf("Выберите пункт 'Расчёт интеграла' ;)\n");
-    }
+    }}
 }
 
 void AboutProgram() {
@@ -276,12 +337,10 @@ void AboutProgram() {
     printf("Пример функции: f(x) = x^3- x^2+ x+7;\n");
     printf("Управление: стрелки ↑↓ и Enter\n\n");
 
-    printf("Версия: 1.1\n");
+    printf("Версия: 9.2\n");
     printf("Разработчик: Куделькин Егор\n");
 }
-
 void ClearInputBuffer() {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    while ((c = getchar()) != '\n' && c != EOF) {}
 }
-
