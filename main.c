@@ -60,12 +60,13 @@ int main() {
         int key = _getch();
         switch(key) {
             case 72:    // стрелка вверх
-                if (point==0) point=SIZE_MENU;
-                if (point > 0) point--;
+                if (point == 0) point = SIZE_MENU - 1;
+                else point--;
                 break;
+
             case 80:    // стрелка вниз
-                if (point==SIZE_MENU) point=0;
-                if (point < SIZE_MENU - 1) point++;
+                if (point == SIZE_MENU - 1) point = 0;
+                else point++;
                 break;
             case 13:    // Enter - выбор пункта
                 system("cls");
@@ -191,7 +192,7 @@ void InputStep(IntegralData* data) {
     char c;
     while (1) {
         int result=scanf("%lf%c",&new_step,&c);
-        if (result == 2 && (c == '\n' || c==' \n')) {
+        if (result == 2 && c == '\n') {
             if (new_step >= 0.001 && new_step<=1) {data->step = new_step;break;}
             else {printf("Шаг должен быть: (10^(-3)<=step>=1) ! Введите снова: ");}
         } else {
@@ -262,10 +263,12 @@ void CalculateIntegral(IntegralData* data) {
 double Calcul_Accuracy(double a, double b) {
   double zero_fun =2.10487;
   if (a <= zero_fun && b >= zero_fun){
-    return (pow(b,4))/4.0 - (pow(b,3))/3.0 +(pow(b,2))/2.0+7*(b) - (pow(zero_fun,4))/4.0 - (pow(zero_fun,3))/3.0 +(pow(zero_fun,2))/2.0+7*(zero_fun);}
+    return (pow(b,4))/4.0 - (pow(b,3))/3.0 +(pow(b,2))/2.0+7*(b)
+      - (pow(zero_fun,4))/4.0 - (pow(zero_fun,3))/3.0 +(pow(zero_fun,2))/2.0+7*(zero_fun);}
   else if (a <= zero_fun && b <= zero_fun) return 0;
   else if (a >= zero_fun && b >= zero_fun){
-    return (pow(b,4))/4.0 - (pow(b,3))/3.0 +(pow(b,2))/2.0+7*(b) - (pow(a,4))/4.0 - (pow(a,3))/3.0 +(pow(a,2))/2.0+7*(a);}
+    return (pow(b,4))/4.0 - (pow(b,3))/3.0 +(pow(b,2))/2.0+7*(b) -
+      (pow(a,4))/4.0 - (pow(a,3))/3.0 +(pow(a,2))/2.0+7*(a);}
   return 0;
 }
 
@@ -305,7 +308,7 @@ void PrintResult(IntegralData* data) {
     printf("Границы интегрирования:\n");
     printf(" ▷ a = %.6lf\n", data->a);
     printf(" ▷ b = %.6lf\n", data->b);
-    if (data->accuracy==0.0) {printf(" ▷ f(x)>0: [2.10487;+∞]");}
+    printf(" ▷ f(x)>0: [2.10487;+∞]");
     printf(" ▷ Длина интервала: %.6lf\n\n", data->b - data->a);
 
     printf("Параметры вычисления:\n");
